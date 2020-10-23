@@ -8,7 +8,8 @@ bool Sphere::Hit(const Ray& ray, double tMin, double tMax, HitRecord& record) co
     double C = glm::dot(AC, AC) - Radius * Radius;
 
     auto discriminant = H * H - A * C;
-    if (discriminant > 0) {
+    if (discriminant > 0) 
+    {
         // Two intersections
         auto alpha = (-H - std::sqrt(discriminant)) / A;
         auto beta = (-H + std::sqrt(discriminant)) / A;
