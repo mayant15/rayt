@@ -6,11 +6,7 @@
 
 int main(int argc, char** argv)
 {
-	ApplicationInfo info;
-	info.WindowHeight = RAYT_WINDOW_HEIGHT;
-	info.WindowWidth = RAYT_WINDOW_WIDTH;
-
-    Application app (info);
+    Application app;
 	try
 	{
 		app.Run();
