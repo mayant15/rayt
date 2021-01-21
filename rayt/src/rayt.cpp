@@ -1,12 +1,14 @@
 #include "Application.h"
+#include "Debug.h"
+#include "Config.h"
 
-#include <iostream>
+#include <exception>
 
 int main(int argc, char** argv)
 {
 	ApplicationInfo info;
-	info.WindowHeight = 720;
-	info.WindowWidth = 1024;
+	info.WindowHeight = RAYT_WINDOW_HEIGHT;
+	info.WindowWidth = RAYT_WINDOW_WIDTH;
 
     Application app (info);
 	try
@@ -15,7 +17,7 @@ int main(int argc, char** argv)
 	}
 	catch (const std::exception& e)
 	{
-		std::cerr << e.what() << std::endl;
+		LOG_ERROR(e.what());
 		return EXIT_FAILURE;
 	}
 

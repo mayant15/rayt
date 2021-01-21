@@ -3,6 +3,7 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
+
 struct ApplicationInfo
 {
     unsigned int WindowHeight;
@@ -11,9 +12,6 @@ struct ApplicationInfo
 
 class Application
 {
-    GLFWwindow* _window;
-    ApplicationInfo _options;
-
 public:
     Application(const ApplicationInfo& info) : _options(info), _window(nullptr) {}
 
@@ -25,7 +23,15 @@ public:
     }
 
 private:
+    GLFWwindow* _window;
+    ApplicationInfo _options;
+
+    VkInstance _instance{};
+
+private:
     void startup();
     void tick();
     void shutdown();
+
+    void createVkInstance();
 };

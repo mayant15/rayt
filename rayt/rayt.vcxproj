@@ -72,15 +72,19 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
+    <IncludePath>$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
+    <IncludePath>$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
+    <IncludePath>$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
+    <IncludePath>$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -88,7 +92,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>D:\VulkanSDK\1.2.154.1\Include;$(SolutionDir)\rayt\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)rayt\external;D:\VulkanSDK\1.2.154.1\Include;$(SolutionDir)\rayt\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OpenMPSupport>true</OpenMPSupport>
     </ClCompile>
     <Link>
@@ -106,7 +110,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>D:\VulkanSDK\1.2.154.1\Include;$(SolutionDir)\rayt\include;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)rayt\external;D:\VulkanSDK\1.2.154.1\Include;$(SolutionDir)\rayt\include;</AdditionalIncludeDirectories>
       <OpenMPSupport>true</OpenMPSupport>
     </ClCompile>
     <Link>
@@ -124,7 +128,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>D:\VulkanSDK\1.2.154.1\Include;$(SolutionDir)\rayt\include;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)rayt\external;D:\VulkanSDK\1.2.154.1\Include;$(SolutionDir)\rayt\include;</AdditionalIncludeDirectories>
       <OpenMPSupport>true</OpenMPSupport>
     </ClCompile>
     <Link>
@@ -142,7 +146,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>D:\VulkanSDK\1.2.154.1\Include;$(SolutionDir)\rayt\include;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)rayt\external;D:\VulkanSDK\1.2.154.1\Include;$(SolutionDir)\rayt\include;</AdditionalIncludeDirectories>
       <OpenMPSupport>true</OpenMPSupport>
     </ClCompile>
     <Link>
@@ -155,28 +159,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src/rayt.cpp" />
-    <ClCompile Include="src/stb_image_write.cpp" />
+    <ClCompile Include="src\rayt.cpp" />
+    <ClCompile Include="src\stb_image_write.cpp" />
     <ClCompile Include="src\Application.cpp" />
-    <ClCompile Include="src\Material.cpp" />
-    <ClCompile Include="src\rtweekend.cpp" />
-    <ClCompile Include="src\Sphere.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\stb_image_write.h" />
+    <ClInclude Include="external\stb_image_write.h" />
+    <ClInclude Include="include\Config.h" />
+    <ClInclude Include="include\MathDefinitions.h" />
     <ClInclude Include="src\Application.h" />
-    <ClInclude Include="src\Camera.h" />
-    <ClInclude Include="src\Color.h" />
-    <ClInclude Include="src\Image.h" />
-    <ClInclude Include="src\Material.h" />
-    <ClInclude Include="src\Ray.h" />
-    <ClInclude Include="src\rayt.h" />
-    <ClInclude Include="src\RenderObject.h" />
-    <ClInclude Include="src\Sphere.h" />
-    <ClInclude Include="src\Util.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include="include\glm\copying.txt" />
+    <ClInclude Include="include\Debug.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

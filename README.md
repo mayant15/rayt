@@ -7,10 +7,12 @@ This repository contains proof-of-concept implementations for experimental techn
 
 ## Dependencies
 
-rayt depends on these libraries which are **NOT** provided with the source here, because I want to focus on just the renderer here and not housekeeping. 
+rayt depends on these libraries which are **NOT** provided with the source.
 
 - [GLFW](https://github.com/glfw/glfw)
 - [VulkanSDK](https://vulkan.lunarg.com/sdk/home)
+- [Eigen](https://eigen.tuxfamily.org/index.php?title=Main_Page)
+- [spdlog](https://github.com/gabime/spdlog)
 
 ## About
 

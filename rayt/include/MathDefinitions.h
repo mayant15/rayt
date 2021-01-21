@@ -1,0 +1,35 @@
+#pragma once
+
+#include <Eigen/Dense>
+#include <limits>
+
+///////////////////////////////////////////////////////////////////////////////
+// Constants
+///////////////////////////////////////////////////////////////////////////////
+
+constexpr double PI  = 3.1415926535897932385;
+constexpr double INF = std::numeric_limits<double>::infinity();
+
+///////////////////////////////////////////////////////////////////////////////
+// Vectors
+///////////////////////////////////////////////////////////////////////////////
+
+using Vec3 = Eigen::Vector3f;
+using Vec4 = Eigen::Vector4f;
+
+#define ORIGIN Vec3 { 0.0f, 0.0f, 0.0f }
+#define X_AXIS Vec3 { 1.0f, 0.0f, 0.0f }
+#define Y_AXIS Vec3 { 0.0f, 1.0f, 0.0f }
+#define Z_AXIS Vec3 { 0.0f, 0.0f, 1.0f }
+
+///////////////////////////////////////////////////////////////////////////////
+// Colors
+///////////////////////////////////////////////////////////////////////////////
+
+using Color = Vec4;
+
+#define WHITE Color { 1.0f, 1.0f, 1.0f, 1.0f }
+#define BLACK Color { 0.0f, 0.0f, 0.0f, 1.0f }
+#define RED   Color { 1.0f, 0.0f, 0.0f, 1.0f }
+#define GREEN Color { 0.0f, 1.0f, 0.0f, 1.0f }
+#define BLUE  Color { 0.0f, 0.0f, 1.0f, 1.0f }
