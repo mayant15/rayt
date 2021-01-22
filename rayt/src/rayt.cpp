@@ -1,23 +1,9 @@
-#include "Application.h"
-#include "Debug.h"
-#include "Config.h"
+#include <rayt/sample.h>
 
-#include <exception>
-
-int main(int argc, char** argv)
+namespace rayt
 {
-    application_t app;
-	try
-	{
-		app.tick();
-	}
-	catch (const std::exception& e)
-	{
-		LOG_ERROR(e.what());
-		return EXIT_FAILURE;
-	}
-
-	// app will be destroyed here, cleanup will be performed
-
-	return EXIT_SUCCESS;
+    int add(int a, int b)
+    {
+        return a + b;
+    }
 }

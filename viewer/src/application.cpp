@@ -1,10 +1,9 @@
-#include "Application.h"
+#include "application.h"
 
-#include "Debug.h"
-#include "Config.h"
+#include <rayt/logger.h>
+#include <rayt/config.h>
 
 #include <vector>
-#include <string>
 #include <stdexcept>
 #include <optional>
 
@@ -19,7 +18,7 @@ class queue_family_indices_t
 public:
     std::optional<unsigned int> graphics_family;
 
-    bool is_complete()
+    [[nodiscard]] bool is_complete() const
     {
         return graphics_family.has_value();
     }
