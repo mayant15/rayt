@@ -130,6 +130,7 @@
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)rayt\external;D:\VulkanSDK\1.2.154.1\Include;$(SolutionDir)\rayt\include;</AdditionalIncludeDirectories>
       <OpenMPSupport>true</OpenMPSupport>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -161,14 +162,14 @@
   <ItemGroup>
     <ClCompile Include="src\rayt.cpp" />
     <ClCompile Include="src\stb_image_write.cpp" />
-    <ClCompile Include="src\Application.cpp" />
+    <ClCompile Include="src\application.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\stb_image_write.h" />
-    <ClInclude Include="include\Config.h" />
-    <ClInclude Include="include\MathDefinitions.h" />
-    <ClInclude Include="src\Application.h" />
-    <ClInclude Include="include\Debug.h" />
+    <ClInclude Include="include\config.h" />
+    <ClInclude Include="include\math_definitions.h" />
+    <ClInclude Include="src\application.h" />
+    <ClInclude Include="include\debug.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -139,9 +139,9 @@ static queue_family_indices_t findQueueFamilies(const VkPhysicalDevice& device)
     return indices;
 }
 
-static bool isSuitableDevice(const VkPhysicalDevice& device)
+static bool isSuitableDevice(const VkPhysicalDevice& physicalDevice)
 {
-    queue_family_indices_t indices = findQueueFamilies(device);
+    queue_family_indices_t indices = findQueueFamilies(physicalDevice);
     return indices.is_complete();
 }
 
@@ -173,34 +173,78 @@ static void pickPhysicalDevice(const VkInstance& instance, VkPhysicalDevice& dev
     }
 }
 
-void Application::startup()
+static void createLogicalDevice(VkPhysicalDevice& physical_device, VkDevice& device, VkQueue& queue)
+{
+    static float queuePriority = 1.0f;
+
+    queue_family_indices_t indices = findQueueFamilies(physical_device);
+
+    VkDeviceQueueCreateInfo queueCreateInfo{};
+    queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+    queueCreateInfo.queueFamilyIndex = indices.graphics_family.has_value();
+    queueCreateInfo.queueCount = 1;
+    queueCreateInfo.pQueuePriorities = &queuePriority;
+
+    VkPhysicalDeviceFeatures deviceFeatures{};
+
+    VkDeviceCreateInfo createInfo{};
+    createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+    createInfo.pQueueCreateInfos = &queueCreateInfo;
+    createInfo.queueCreateInfoCount = 1;
+    createInfo.pEnabledFeatures = &deviceFeatures;
+
+    // Device validation layers
+    createInfo.enabledExtensionCount = 0;
+    if (ENABLE_VALIDATION_LAYERS)
+    {
+        createInfo.enabledLayerCount = VALIDATION_LAYER_NAMES.size();
+        createInfo.ppEnabledLayerNames = VALIDATION_LAYER_NAMES.data();
+    }
+    else
+    {
+        createInfo.enabledLayerCount = 0;
+    }
+
+    if (vkCreateDevice(physical_device, &createInfo, nullptr, &device) != VK_SUCCESS)
+    {
+        throw std::runtime_error{ "Failed to create a logical device" };
+    }
+
+    // vkGetDeviceQueue(device, indices.graphics_family.value(), 0, &queue);
+}
+
+application_t::application_t()
 {
     LOG_INFO("Starting up");
+
     glfwInit();
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
-    pWindow =  glfwCreateWindow(RAYT_WINDOW_WIDTH, RAYT_WINDOW_HEIGHT, "rayt", nullptr, nullptr);
-    glfwMakeContextCurrent(pWindow);
+    p_window =  glfwCreateWindow(RAYT_WINDOW_WIDTH, RAYT_WINDOW_HEIGHT, "rayt", nullptr, nullptr);
 
-    glfwSetKeyCallback(pWindow, keyboardCallback);
+    glfwSetKeyCallback(p_window, keyboardCallback);
 
     createVkInstance(instance);
-    pickPhysicalDevice(instance, device);
+    pickPhysicalDevice(instance, physical_device);
+    createLogicalDevice(physical_device, device, graphics_queue);
 }
 
-void Application::tick()
+void application_t::tick()
 {
-    while(!glfwWindowShouldClose(pWindow))
+    while(!glfwWindowShouldClose(p_window))
     {
         glfwPollEvents();
     }
 }
 
-void Application::shutdown()
+application_t::~application_t()
 {
     LOG_INFO("Shutting down");
+
+    vkDestroyDevice(device, nullptr);
     vkDestroyInstance(instance, nullptr);
-    glfwDestroyWindow(pWindow);
+    
+    glfwDestroyWindow(p_window);
     glfwTerminate();
 }

@@ -21,24 +21,24 @@
     <ClCompile Include="src\stb_image_write.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Application.cpp">
+    <ClCompile Include="src\application.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\Application.h">
+    <ClInclude Include="src\application.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\Debug.h">
+    <ClInclude Include="include\debug.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\Config.h">
+    <ClInclude Include="include\config.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="external\stb_image_write.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\MathDefinitions.h">
+    <ClInclude Include="include\math_definitions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

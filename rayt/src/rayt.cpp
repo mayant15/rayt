@@ -6,16 +6,18 @@
 
 int main(int argc, char** argv)
 {
-    Application app;
+    application_t app;
 	try
 	{
-		app.Run();
+		app.tick();
 	}
 	catch (const std::exception& e)
 	{
 		LOG_ERROR(e.what());
 		return EXIT_FAILURE;
 	}
+
+	// app will be destroyed here, cleanup will be performed
 
 	return EXIT_SUCCESS;
 }
