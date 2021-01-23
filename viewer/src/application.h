@@ -1,7 +1,9 @@
 #pragma once
 
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
+#include <rayt/window.h>
+#include <rayt/renderer.h>
+
+#include <memory>
 
 class application_t
 {
@@ -12,9 +14,6 @@ public:
     void tick();
 
 private:
-    GLFWwindow* p_window = nullptr;
-    VkInstance instance{};
-    VkPhysicalDevice physical_device = VK_NULL_HANDLE;
-    VkDevice device = VK_NULL_HANDLE;
-    VkQueue graphics_queue{};
+    std::unique_ptr<rayt::window_t> m_window_ptr;
+    std::unique_ptr<rayt::renderer_t> m_renderer_ptr;
 };

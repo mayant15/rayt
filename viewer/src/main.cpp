@@ -1,7 +1,6 @@
-#include <rayt/logger.h>
-
 #include "application.h"
 
+#include <rayt/logger.h>
 #include <exception>
 
 int main(int argc, char** argv)
