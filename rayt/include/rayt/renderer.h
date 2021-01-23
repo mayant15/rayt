@@ -10,6 +10,7 @@
 
 namespace rayt
 {
+    /** @brief Client interface for the renderer and maintaining state */
     class RAYT_EXPORT renderer_t
     {
         VkInstance m_instance {};
@@ -19,7 +20,6 @@ namespace rayt
 
     public:
         renderer_t();
-
         ~renderer_t() noexcept;
     };
 }

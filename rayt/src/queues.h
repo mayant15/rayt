@@ -5,6 +5,7 @@
 
 namespace rayt
 {
+    /** @brief Indices for available Vulkan queue families */
     class queue_family_indices_t
     {
     public:

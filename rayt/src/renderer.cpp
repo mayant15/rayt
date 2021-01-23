@@ -10,21 +10,47 @@
 
 namespace rayt
 {
+    /** @brief Array of required validation layer names */
     static const std::vector<const char*> LAYER_NAMES = {RAYT_REQUIRED_VALIDATION_LAYERS}; // NOLINT(cert-err58-cpp)
 
-    // Instance utils
+    /** @brief Check if all required validation layers are available */
     static bool check_required_layer_support();
 
+    /**
+     * @brief Create a Vulkan instance
+     * @param instance Reference to a Vulkan instance variable to be populated
+     */
     static void create_instance(VkInstance& instance);
 
-    // Device utils
+    /**
+     * @brief Find queue family indices for a specific physical device
+     * @param device Reference to the physical device to query
+     * @return Indices found on the given physical device
+     */
     static queue_family_indices_t find_queue_families(const VkPhysicalDevice& device);
 
+    /**
+     * @brief Check if a physical device has required features and properties
+     * @param device Reference to the device to query
+     * @return True if all requirements are satisfied
+     */
     static bool is_suitable_device(const VkPhysicalDevice& device);
 
+    /**
+     * @brief Choose a physical device from all available devices
+     * @param instance Reference to the active Vulkan instance
+     * @param device   Reference to the Vulkan physical device to populate
+     */
     static void select_physical_device(VkInstance& instance, VkPhysicalDevice& device);
 
+    /**
+     * @brief Create a Vulkan logical device
+     * @param physical_device Reference to the active Vulkan physical device
+     * @param device          Reference to the Vulkan logical device to populate
+     * @param queue           Reference to the Vulkan graphics queue to populate
+     */
     static void create_logical_device(VkPhysicalDevice& physical_device, VkDevice& device, VkQueue& queue);
+
 
     renderer_t::renderer_t()
     {
@@ -32,6 +58,7 @@ namespace rayt
         select_physical_device(m_instance, m_physical_device);
         create_logical_device(m_physical_device, m_device, m_graphics_queue);
     }
+
 
     renderer_t::~renderer_t() noexcept
     {
@@ -45,6 +72,7 @@ namespace rayt
             LOG_ERROR(e.what());
         }
     }
+
 
     bool check_required_layer_support()
     {
@@ -75,6 +103,7 @@ namespace rayt
 
         return true;
     }
+
 
     void create_instance(VkInstance& instance)
     {
@@ -119,6 +148,7 @@ namespace rayt
         }
     }
 
+
     queue_family_indices_t find_queue_families(const VkPhysicalDevice& device)
     {
         queue_family_indices_t indices;
@@ -145,11 +175,13 @@ namespace rayt
         return indices;
     }
 
+
     bool is_suitable_device(const VkPhysicalDevice& device)
     {
         auto indices = find_queue_families(device);
         return indices.is_complete();
     }
+
 
     void select_physical_device(VkInstance& instance, VkPhysicalDevice& device)
     {
@@ -178,6 +210,7 @@ namespace rayt
             throw std::runtime_error {"Available GPUs do not support Vulkan"};
         }
     }
+
 
     void create_logical_device(VkPhysicalDevice& physical_device, VkDevice& device, VkQueue& queue)
     {
