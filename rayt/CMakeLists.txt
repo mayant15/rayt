@@ -14,6 +14,10 @@ set(RAYT_SOURCES
 
     src/renderer.cpp
     src/window.cpp
+    src/surface.cpp
+    src/instance.cpp
+    src/devices.cpp
+    src/queues.cpp
 )
 
 add_library(rayt SHARED ${RAYT_SOURCES})
