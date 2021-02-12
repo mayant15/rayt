@@ -4,8 +4,9 @@
 application_t::application_t()
 {
     LOG_INFO("Starting up");
+
     m_window_ptr = std::make_unique<rayt::window_t>();
-    m_renderer_ptr = std::make_unique<rayt::renderer_t>();
+    m_renderer_ptr = std::make_unique<rayt::renderer_t>(m_window_ptr.get());
 }
 
 void application_t::tick()

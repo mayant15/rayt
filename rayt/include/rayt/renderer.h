@@ -1,5 +1,8 @@
 #pragma once
 
+#include "types.h"
+#include "window.h"
+
 #include "instance.h"
 #include "queues.h"
 #include "devices.h"
@@ -22,8 +25,12 @@ namespace rayt
         device_t m_device;
         queue_t m_queue;
 
+        window_t* m_window_ptr = nullptr;
+
     public:
-        renderer_t();
+        explicit renderer_t(window_t* p_window = nullptr);
         ~renderer_t() = default;
+
+        void draw() {};
     };
 }
