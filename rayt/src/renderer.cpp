@@ -1,41 +1,108 @@
 #include <rayt/renderer.h>
+#include <rayt/config.h>
+#include <bootstrap.h>
+
+#define VK_MAJOR_VERSION 1
+#define VK_MINOR_VERSION 2
+#define VK_PATCH_VERSION 0
+
+#define VK_SHORT_VERSION VK_MAJOR_VERSION, VK_MINOR_VERSION
+#define VK_VERSION       VK_MAJOR_VERSION, VK_MINOR_VERSION, VK_PATCH_VERSION
 
 namespace rayt
 {
-    /**
-     * @brief Check if the physical device is appropriate for our purposes
-     * @param device Physical device to consider
-     * @return true if it has all the required queues
-     */
-    static bool is_suitable_device(const physical_device_t& device)
+    static vkb::Instance create_instance()
     {
-        queue_family_indices_t indices { device };
-        return indices.is_complete();
+        vkb::InstanceBuilder builder;
+
+        auto instance_result = builder
+                .set_app_name("rayt")
+#ifdef RAYT_ENABLE_VALIDATION_LAYERS
+                .request_validation_layers(true)
+#else
+                        .request_validation_layers(false)
+#endif
+                .require_api_version(VK_VERSION)
+                .use_default_debug_messenger()
+                .build();
+
+        return instance_result.value();
+    }
+
+    static vkb::PhysicalDevice choose_physical_device(const vkb::Instance& instance, const VkSurfaceKHR& surface)
+    {
+        vkb::PhysicalDeviceSelector selector { instance };
+        auto device = selector
+                .set_minimum_version(VK_SHORT_VERSION)
+                .set_surface(surface)
+                .select();
+
+        return device.value();
+    }
+
+    static vkb::Device create_logical_device(const vkb::PhysicalDevice& physical_device)
+    {
+        vkb::DeviceBuilder builder { physical_device };
+        return builder.build().value();
+    }
+
+    static vkb::Swapchain create_swapchain(const VkPhysicalDevice& physical_device, const VkDevice& device, const VkSurfaceKHR& surface, const window_t& window)
+    {
+        vkb::SwapchainBuilder builder { physical_device, device, surface };
+        auto vkb_swapchain = builder
+                .use_default_format_selection()
+                .set_desired_present_mode(VK_PRESENT_MODE_FIFO_KHR)
+                .set_desired_extent(window.width, window.height)
+                .build();
+
+        return vkb_swapchain.value();
     }
 
     renderer_t::renderer_t(window_t* p_window)
+            : m_window_ptr(p_window)
     {
+        // Create instance
+        auto vkb_instance = create_instance();
+        m_instance = vkb_instance.instance;
+        m_messenger = vkb_instance.debug_messenger;
+
+        // Create surface
+        m_window_ptr->create_surface(m_instance, m_surface);
+
         // Choose physical device
-        auto devices = enumerate_physical_devices(m_instance);
-        for (const auto& device : devices)
-        {
-            if (is_suitable_device(device) && device.is_valid())
-            {
-                m_physical_device = device;
-                break;
-            }
-        }
+        auto vkb_physical_device = choose_physical_device(vkb_instance, m_surface);
+        m_physical_device = vkb_physical_device.physical_device;
 
         // Create logical device
-        m_device = device_t { m_physical_device };
+        auto vkb_device = create_logical_device(vkb_physical_device);
+        m_device = vkb_device.device;
 
-        // Find the graphics queue
-//        auto indices = queue_family_indices_t { m_physical_device };
-//        m_queue = queue_t { m_device, indices.m_graphics_family.value(), 0};
+        // Create swapchain
+        // TODO: Move to window_t?
+        auto vkb_swapchain = create_swapchain(m_physical_device, m_device, m_surface, *m_window_ptr);
+        m_swapchain = vkb_swapchain.swapchain;
+        m_swapchain_images = vkb_swapchain.get_images().value();
+        m_swapchain_image_views = vkb_swapchain.get_image_views().value();
+        m_swapchain_image_format = vkb_swapchain.image_format;
+    }
 
-        if (p_window != nullptr)
+    renderer_t::~renderer_t()
+    {
+        // Destroy the swapchain
+        vkDestroySwapchainKHR(m_device, m_swapchain, nullptr);
+        for (const auto& view : m_swapchain_image_views)
         {
-            m_window_ptr = p_window;
+            vkDestroyImageView(m_device, view, nullptr);
         }
+
+        // Destroy device
+        vkDestroyDevice(m_device, nullptr);
+
+        // Destroy surface
+        vkDestroySurfaceKHR(m_instance, m_surface, nullptr);
+
+        // Destroy instance
+        vkb::destroy_debug_utils_messenger(m_instance, m_messenger, nullptr);
+        vkDestroyInstance(m_instance, nullptr);
     }
 }

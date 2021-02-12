@@ -11,13 +11,10 @@ set(RAYT_INCLUDE_DIRS
 
 set(RAYT_SOURCES
     external/stb_image_write.cpp
+    external/bootstrap.cpp
 
     src/renderer.cpp
     src/window.cpp
-    src/surface.cpp
-    src/instance.cpp
-    src/devices.cpp
-    src/queues.cpp
 )
 
 add_library(rayt SHARED ${RAYT_SOURCES})

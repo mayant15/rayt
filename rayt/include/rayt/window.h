@@ -10,6 +10,9 @@ namespace rayt
         GLFWwindow* m_native_ptr = nullptr;
 
     public:
+        int width;
+        int height;
+
         window_t();
         ~window_t() noexcept;
 
@@ -18,5 +21,7 @@ namespace rayt
 
         /** @brief Query if window should close this frame */
         [[nodiscard]] bool should_close() const;
+
+        void create_surface(const VkInstance& instance, VkSurfaceKHR& surface);
     };
 }

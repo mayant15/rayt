@@ -8,11 +8,13 @@ namespace rayt
 {
 
     window_t::window_t()
+            : width(RAYT_WINDOW_WIDTH),
+              height(RAYT_WINDOW_HEIGHT)
     {
         glfwInit();
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
         glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-        m_native_ptr = glfwCreateWindow(RAYT_WINDOW_WIDTH, RAYT_WINDOW_HEIGHT, RAYT_WINDOW_TITLE, nullptr, nullptr);
+        m_native_ptr = glfwCreateWindow(width, height, RAYT_WINDOW_TITLE, nullptr, nullptr);
     }
 
 
@@ -39,5 +41,13 @@ namespace rayt
     bool window_t::should_close() const
     {
         return glfwWindowShouldClose(m_native_ptr);
+    }
+
+    void window_t::create_surface(const VkInstance& instance, VkSurfaceKHR& surface)
+    {
+        if (glfwCreateWindowSurface(instance, m_native_ptr, nullptr, &surface) != VK_SUCCESS)
+        {
+            throw std::runtime_error { "Failed to create window surface." };
+        }
     }
 }
