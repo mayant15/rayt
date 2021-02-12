@@ -24,16 +24,21 @@ namespace rayt
         VkQueue m_graphics_queue;
         unsigned int m_graphics_queue_family;
 
-        VkCommandPool m_command_pool{};
-        VkCommandBuffer m_main_command_buffer{};
+        VkCommandPool m_command_pool {};
+        VkCommandBuffer m_main_command_buffer {};
+
+        VkRenderPass m_render_pass {};
+        std::vector<VkFramebuffer> m_framebuffers;
 
     public:
         explicit renderer_t(window_t* p_window = nullptr);
         ~renderer_t();
 
-        void draw() {};
+        void draw()
+        {};
 
     private:
         void init_commands();
+        void init_framebuffer();
     };
 }

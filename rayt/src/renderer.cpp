@@ -62,6 +62,37 @@ namespace rayt
         return vkb_swapchain.value();
     }
 
+    static void create_default_render_pass(VkFormat format, const VkDevice& device, VkRenderPass& render_pass)
+    {
+        VkAttachmentDescription color_attachment {};
+        color_attachment.format = format;
+        color_attachment.samples = VK_SAMPLE_COUNT_1_BIT;
+        color_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        color_attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        color_attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        color_attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        color_attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        color_attachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+        VkAttachmentReference color_attachment_ref {};
+        color_attachment_ref.attachment = 0;
+        color_attachment_ref.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+        VkSubpassDescription subpass {};
+        subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+        subpass.colorAttachmentCount = 1;
+        subpass.pColorAttachments = &color_attachment_ref;
+
+        VkRenderPassCreateInfo render_pass_info {};
+        render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+        render_pass_info.attachmentCount = 1;
+        render_pass_info.pAttachments = &color_attachment;
+        render_pass_info.subpassCount = 1;
+        render_pass_info.pSubpasses = &subpass;
+
+        VK_SAFE_CALL(vkCreateRenderPass(device, &render_pass_info, nullptr, &render_pass))
+    }
+
     renderer_t::renderer_t(window_t* p_window)
             : m_window_ptr(p_window)
     {
@@ -95,6 +126,10 @@ namespace rayt
 
         // Setup commands
         init_commands();
+
+        // Setup render pass
+        create_default_render_pass(m_swapchain_image_format, m_device, m_render_pass);
+        init_framebuffer();
     }
 
     void renderer_t::init_commands()
@@ -108,16 +143,37 @@ namespace rayt
         VK_SAFE_CALL(vkAllocateCommandBuffers(m_device, &buf_info, &m_main_command_buffer))
     }
 
+    void renderer_t::init_framebuffer()
+    {
+        VkFramebufferCreateInfo fb_info {};
+        fb_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+        fb_info.pNext = nullptr;
+        fb_info.renderPass = m_render_pass;
+        fb_info.attachmentCount = 1;
+        fb_info.width = m_window_ptr->width;
+        fb_info.height = m_window_ptr->height;
+        fb_info.layers = 1;
+
+        m_framebuffers = std::vector<VkFramebuffer>(m_swapchain_images.size());
+        for (int i = 0; i < m_swapchain_image_views.size(); ++i)
+        {
+            fb_info.pAttachments = &m_swapchain_image_views[i];
+            VK_SAFE_CALL(vkCreateFramebuffer(m_device, &fb_info, nullptr, &m_framebuffers[i]))
+        }
+    }
+
     renderer_t::~renderer_t()
     {
         // Destroy commands
         vkDestroyCommandPool(m_device, m_command_pool, nullptr);
 
-        // Destroy the swapchain
+        // Destroy the swapchain and render pass
         vkDestroySwapchainKHR(m_device, m_swapchain, nullptr);
-        for (const auto& view : m_swapchain_image_views)
+        vkDestroyRenderPass(m_device, m_render_pass, nullptr);
+        for (int i = 0; i < m_swapchain_image_views.size(); ++i)
         {
-            vkDestroyImageView(m_device, view, nullptr);
+            vkDestroyFramebuffer(m_device, m_framebuffers[i], nullptr);
+            vkDestroyImageView(m_device, m_swapchain_image_views[i], nullptr);
         }
 
         // Destroy device
