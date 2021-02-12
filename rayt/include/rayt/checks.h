@@ -2,7 +2,7 @@
 
 #include "logger.h"
 
-#define RAYT_CHECK(x)                           \
+#define VK_SAFE_CALL(x)                         \
     {                                           \
         VkResult err = x;                       \
         if (err)                                \

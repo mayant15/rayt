@@ -21,10 +21,19 @@ namespace rayt
         std::vector<VkImage> m_swapchain_images;
         std::vector<VkImageView> m_swapchain_image_views;
 
+        VkQueue m_graphics_queue;
+        unsigned int m_graphics_queue_family;
+
+        VkCommandPool m_command_pool{};
+        VkCommandBuffer m_main_command_buffer{};
+
     public:
         explicit renderer_t(window_t* p_window = nullptr);
         ~renderer_t();
 
         void draw() {};
+
+    private:
+        void init_commands();
     };
 }

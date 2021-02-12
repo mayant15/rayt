@@ -1,5 +1,7 @@
 #include <rayt/renderer.h>
 #include <rayt/config.h>
+#include <rayt/checks.h>
+#include <rayt/initializers.h>
 #include <bootstrap.h>
 
 #define VK_MAJOR_VERSION 1
@@ -46,7 +48,9 @@ namespace rayt
         return builder.build().value();
     }
 
-    static vkb::Swapchain create_swapchain(const VkPhysicalDevice& physical_device, const VkDevice& device, const VkSurfaceKHR& surface, const window_t& window)
+    static vkb::Swapchain
+    create_swapchain(const VkPhysicalDevice& physical_device, const VkDevice& device, const VkSurfaceKHR& surface,
+                     const window_t& window)
     {
         vkb::SwapchainBuilder builder { physical_device, device, surface };
         auto vkb_swapchain = builder
@@ -84,10 +88,31 @@ namespace rayt
         m_swapchain_images = vkb_swapchain.get_images().value();
         m_swapchain_image_views = vkb_swapchain.get_image_views().value();
         m_swapchain_image_format = vkb_swapchain.image_format;
+
+        // Setup queues
+        m_graphics_queue = vkb_device.get_queue(vkb::QueueType::graphics).value();
+        m_graphics_queue_family = vkb_device.get_queue_index(vkb::QueueType::graphics).value();
+
+        // Setup commands
+        init_commands();
+    }
+
+    void renderer_t::init_commands()
+    {
+        // Create a command pool
+        VK_CREATE_COMMAND_POOL_INFO(pool_info, m_graphics_queue_family, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT)
+        VK_SAFE_CALL(vkCreateCommandPool(m_device, &pool_info, nullptr, &m_command_pool))
+
+        // Create a command buffer
+        VK_CREATE_COMMAND_BUFFER_INFO(buf_info, m_command_pool, 1, VK_COMMAND_BUFFER_LEVEL_PRIMARY)
+        VK_SAFE_CALL(vkAllocateCommandBuffers(m_device, &buf_info, &m_main_command_buffer))
     }
 
     renderer_t::~renderer_t()
     {
+        // Destroy commands
+        vkDestroyCommandPool(m_device, m_command_pool, nullptr);
+
         // Destroy the swapchain
         vkDestroySwapchainKHR(m_device, m_swapchain, nullptr);
         for (const auto& view : m_swapchain_image_views)
