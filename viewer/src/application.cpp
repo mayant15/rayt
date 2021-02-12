@@ -13,6 +13,7 @@ void application_t::tick()
 {
     while(!m_window_ptr->should_close())
     {
+        m_renderer_ptr->draw();
         m_window_ptr->poll_events();
     }
 }

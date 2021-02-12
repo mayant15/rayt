@@ -130,6 +130,9 @@ namespace rayt
         // Setup render pass
         create_default_render_pass(m_swapchain_image_format, m_device, m_render_pass);
         init_framebuffer();
+
+        // Setup sync structures
+        init_sync_structures();
     }
 
     void renderer_t::init_commands()
@@ -160,6 +163,106 @@ namespace rayt
             fb_info.pAttachments = &m_swapchain_image_views[i];
             VK_SAFE_CALL(vkCreateFramebuffer(m_device, &fb_info, nullptr, &m_framebuffers[i]))
         }
+    }
+
+    void renderer_t::init_sync_structures()
+    {
+        // Create fence
+        VkFenceCreateInfo fence_info {};
+        fence_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+        fence_info.pNext = nullptr;
+        fence_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+        VK_SAFE_CALL(vkCreateFence(m_device, &fence_info, nullptr, &m_render_fence));
+
+        // Create semaphores
+        VkSemaphoreCreateInfo sem_info {};
+        sem_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+        sem_info.pNext = nullptr;
+        sem_info.flags = 0;
+
+        VK_SAFE_CALL(vkCreateSemaphore(m_device, &sem_info, nullptr, &m_present_semaphore))
+        VK_SAFE_CALL(vkCreateSemaphore(m_device, &sem_info, nullptr, &m_render_semaphore))
+    }
+
+    void renderer_t::draw()
+    {
+        ++m_frame_number;
+
+        // Start frame
+        VK_SAFE_CALL(vkWaitForFences(m_device, 1, &m_render_fence, true, 1e9))
+        VK_SAFE_CALL(vkResetFences(m_device, 1, &m_render_fence));
+
+        unsigned int swapchain_image_index;
+        VK_SAFE_CALL(
+                vkAcquireNextImageKHR(m_device, m_swapchain, 1e9, m_present_semaphore, nullptr, &swapchain_image_index))
+
+        VK_SAFE_CALL(vkResetCommandBuffer(m_main_command_buffer, 0))
+
+        VkCommandBuffer cmd = m_main_command_buffer;
+
+        VkCommandBufferBeginInfo begin_info {};
+        begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        begin_info.pNext = nullptr;
+        begin_info.pInheritanceInfo = nullptr;
+        begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+        VK_SAFE_CALL(vkBeginCommandBuffer(cmd, &begin_info))
+
+        // Record draw calls
+        VkClearValue clear_value;
+        float flash = abs(sin(m_frame_number / 120.0f));
+        clear_value.color = {{ 0.6f, 0.6f, flash, 1.0f }};
+
+        VkRenderPassBeginInfo rp_info {};
+        rp_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        rp_info.pNext = nullptr;
+        rp_info.renderPass = m_render_pass;
+        rp_info.renderArea.offset.x = 0;
+        rp_info.renderArea.offset.y = 0;
+        rp_info.renderArea.extent = {
+                (unsigned int) m_window_ptr->width,
+                (unsigned int) m_window_ptr->height
+        };
+        rp_info.framebuffer = m_framebuffers[swapchain_image_index];
+        rp_info.clearValueCount = 1;
+        rp_info.pClearValues = &clear_value;
+
+        vkCmdBeginRenderPass(cmd, &rp_info, VK_SUBPASS_CONTENTS_INLINE);
+        vkCmdEndRenderPass(cmd);
+
+        VK_SAFE_CALL(vkEndCommandBuffer(cmd))
+
+        // Submit the queue
+        VkSubmitInfo submit {};
+        submit.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        submit.pNext = nullptr;
+
+        VkPipelineStageFlags wait_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        submit.pWaitDstStageMask = &wait_stage;
+
+        submit.waitSemaphoreCount = 1;
+        submit.pWaitSemaphores = &m_present_semaphore;
+
+        submit.signalSemaphoreCount = 1;
+        submit.pSignalSemaphores = &m_render_semaphore;
+
+        submit.commandBufferCount = 1;
+        submit.pCommandBuffers = &cmd;
+
+        VK_SAFE_CALL(vkQueueSubmit(m_graphics_queue, 1, &submit, m_render_fence))
+
+        // Display to the screen
+        VkPresentInfoKHR present_info {};
+        present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+        present_info.pNext = nullptr;
+        present_info.pSwapchains = &m_swapchain;
+        present_info.swapchainCount = 1;
+        present_info.pWaitSemaphores = &m_render_semaphore;
+        present_info.waitSemaphoreCount = 1;
+        present_info.pImageIndices = &swapchain_image_index;
+
+        VK_SAFE_CALL(vkQueuePresentKHR(m_graphics_queue, &present_info))
     }
 
     renderer_t::~renderer_t()

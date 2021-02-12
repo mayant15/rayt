@@ -30,15 +30,21 @@ namespace rayt
         VkRenderPass m_render_pass {};
         std::vector<VkFramebuffer> m_framebuffers;
 
+        VkSemaphore m_present_semaphore;
+        VkSemaphore m_render_semaphore;
+        VkFence m_render_fence;
+
+        unsigned int m_frame_number = 0;
+
     public:
         explicit renderer_t(window_t* p_window = nullptr);
         ~renderer_t();
 
-        void draw()
-        {};
+        void draw();
 
     private:
         void init_commands();
         void init_framebuffer();
+        void init_sync_structures();
     };
 }
