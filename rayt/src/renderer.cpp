@@ -197,8 +197,8 @@ namespace rayt
 
     void renderer_t::init_pipelines()
     {
-        VK_LOAD_SHADER_MODULE(frag, "shaders/triangle.frag.spv")
-        VK_LOAD_SHADER_MODULE(vert, "shaders/triangle.vert.spv")
+        VK_LOAD_SHADER_MODULE(frag, "../shaders/checker.frag.spv")
+        VK_LOAD_SHADER_MODULE(vert, "../shaders/checker.vert.spv")
 
         auto layout_info = detail::create_pipeline_layout_info();
         VK_SAFE_CALL(vkCreatePipelineLayout(m_device, &layout_info, nullptr, &m_triangle_pipeline_layout))

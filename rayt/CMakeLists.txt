@@ -10,7 +10,10 @@ find_program(GLSL_VALIDATOR glslangValidator HINTS /usr/bin /usr/local/bin $ENV{
 set(GLSL_SOURCE_FILES
     shaders/triangle.vert
     shaders/triangle.frag
-    )
+
+    shaders/checker.vert
+    shaders/checker.frag
+)
 
 foreach (GLSL ${GLSL_SOURCE_FILES})
     get_filename_component(FILE_NAME ${GLSL} NAME)
