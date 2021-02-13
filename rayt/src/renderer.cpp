@@ -126,6 +126,9 @@ namespace rayt
         m_swapchain_images = vkb_swapchain.get_images().value();
         m_swapchain_image_views = vkb_swapchain.get_image_views().value();
         m_swapchain_image_format = vkb_swapchain.image_format;
+        m_deletion_queue.push([=]() {
+            vkDestroySwapchainKHR(m_device, m_swapchain, nullptr);
+        });
 
         // Setup queues
         m_graphics_queue = vkb_device.get_queue(vkb::QueueType::graphics).value();
@@ -136,6 +139,10 @@ namespace rayt
 
         // Setup render pass
         create_default_render_pass(m_swapchain_image_format, m_device, m_render_pass);
+        m_deletion_queue.push([=]() {
+            vkDestroyRenderPass(m_device, m_render_pass, nullptr);
+        });
+
         init_framebuffer();
 
         // Setup sync structures
@@ -154,6 +161,10 @@ namespace rayt
         // Create a command buffer
         auto buffer = detail::create_command_buffer_info(m_command_pool, 1, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
         VK_SAFE_CALL(vkAllocateCommandBuffers(m_device, &buffer, &m_main_command_buffer))
+
+        m_deletion_queue.push([=]() {
+            vkDestroyCommandPool(m_device, m_command_pool, nullptr);
+        });
     }
 
     void renderer_t::init_framebuffer()
@@ -172,6 +183,11 @@ namespace rayt
         {
             fb_info.pAttachments = &m_swapchain_image_views[i];
             VK_SAFE_CALL(vkCreateFramebuffer(m_device, &fb_info, nullptr, &m_framebuffers[i]))
+
+            m_deletion_queue.push([=]() {
+                vkDestroyFramebuffer(m_device, m_framebuffers[i], nullptr);
+                vkDestroyImageView(m_device, m_swapchain_image_views[i], nullptr);
+            });
         }
     }
 
@@ -185,6 +201,10 @@ namespace rayt
 
         VK_SAFE_CALL(vkCreateFence(m_device, &fence_info, nullptr, &m_render_fence));
 
+        m_deletion_queue.push([=]() {
+            vkDestroyFence(m_device, m_render_fence, nullptr);
+        });
+
         // Create semaphores
         VkSemaphoreCreateInfo sem_info {};
         sem_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
@@ -193,6 +213,11 @@ namespace rayt
 
         VK_SAFE_CALL(vkCreateSemaphore(m_device, &sem_info, nullptr, &m_present_semaphore))
         VK_SAFE_CALL(vkCreateSemaphore(m_device, &sem_info, nullptr, &m_render_semaphore))
+
+        m_deletion_queue.push([=]() {
+            vkDestroySemaphore(m_device, m_render_semaphore, nullptr);
+            vkDestroySemaphore(m_device, m_present_semaphore, nullptr);
+        });
     }
 
     void renderer_t::init_pipelines()
@@ -231,6 +256,15 @@ namespace rayt
         builder.m_pipeline_layout = m_triangle_pipeline_layout;
 
         m_triangle_pipeline = builder.build(m_device, m_render_pass);
+
+        // Can safely delete the shader module now
+        vkDestroyShaderModule(m_device, vert, nullptr);
+        vkDestroyShaderModule(m_device, frag, nullptr);
+
+        m_deletion_queue.push([=]() {
+            vkDestroyPipeline(m_device, m_triangle_pipeline, nullptr);
+            vkDestroyPipelineLayout(m_device, m_triangle_pipeline_layout, nullptr);
+        });
     }
 
     void renderer_t::draw()
@@ -354,25 +388,13 @@ namespace rayt
 
     renderer_t::~renderer_t()
     {
-        // Destroy commands
-        vkDestroyCommandPool(m_device, m_command_pool, nullptr);
+        vkWaitForFences(m_device, 1, &m_render_fence, true, 1e9);
 
-        // Destroy the swapchain and render pass
-        vkDestroySwapchainKHR(m_device, m_swapchain, nullptr);
-        vkDestroyRenderPass(m_device, m_render_pass, nullptr);
-        for (int i = 0; i < m_swapchain_image_views.size(); ++i)
-        {
-            vkDestroyFramebuffer(m_device, m_framebuffers[i], nullptr);
-            vkDestroyImageView(m_device, m_swapchain_image_views[i], nullptr);
-        }
+        m_deletion_queue.flush();
 
-        // Destroy device
+        vkDestroySurfaceKHR(m_instance, m_surface, nullptr);
         vkDestroyDevice(m_device, nullptr);
 
-        // Destroy surface
-        vkDestroySurfaceKHR(m_instance, m_surface, nullptr);
-
-        // Destroy instance
         vkb::destroy_debug_utils_messenger(m_instance, m_messenger, nullptr);
         vkDestroyInstance(m_instance, nullptr);
     }

@@ -2,6 +2,7 @@
 
 #include "types.h"
 #include "window.h"
+#include "deletion_queue.h"
 
 namespace rayt
 {
@@ -38,6 +39,8 @@ namespace rayt
 
         VkPipelineLayout  m_triangle_pipeline_layout;
         VkPipeline m_triangle_pipeline;
+
+        detail::deletion_queue_t m_deletion_queue;
 
     public:
         explicit renderer_t(window_t* p_window = nullptr);
