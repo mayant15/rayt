@@ -30,11 +30,14 @@ namespace rayt
         VkRenderPass m_render_pass {};
         std::vector<VkFramebuffer> m_framebuffers;
 
-        VkSemaphore m_present_semaphore;
-        VkSemaphore m_render_semaphore;
-        VkFence m_render_fence;
+        VkSemaphore m_present_semaphore{};
+        VkSemaphore m_render_semaphore{};
+        VkFence m_render_fence{};
 
         unsigned int m_frame_number = 0;
+
+        VkPipelineLayout  m_triangle_pipeline_layout;
+        VkPipeline m_triangle_pipeline;
 
     public:
         explicit renderer_t(window_t* p_window = nullptr);
@@ -42,9 +45,12 @@ namespace rayt
 
         void draw();
 
+        bool load_shader_module(const std::string& path, VkShaderModule& module);
+
     private:
         void init_commands();
         void init_framebuffer();
         void init_sync_structures();
+        void init_pipelines();
     };
 }

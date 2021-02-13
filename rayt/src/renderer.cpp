@@ -3,6 +3,8 @@
 #include <rayt/checks.h>
 #include <rayt/initializers.h>
 #include <bootstrap.h>
+#include <fstream>
+#include <rayt/pipelines.h>
 
 #define VK_MAJOR_VERSION 1
 #define VK_MINOR_VERSION 2
@@ -10,6 +12,11 @@
 
 #define VK_SHORT_VERSION VK_MAJOR_VERSION, VK_MINOR_VERSION
 #define VK_VERSION       VK_MAJOR_VERSION, VK_MINOR_VERSION, VK_PATCH_VERSION
+
+#define VK_LOAD_SHADER_MODULE(VARNAME, PATH) \
+    VkShaderModule VARNAME; \
+    LOG_INFO("Loading {}", PATH); \
+    load_shader_module(PATH, VARNAME);
 
 namespace rayt
 {
@@ -133,17 +140,20 @@ namespace rayt
 
         // Setup sync structures
         init_sync_structures();
+
+        init_pipelines();
     }
 
     void renderer_t::init_commands()
     {
         // Create a command pool
-        VK_CREATE_COMMAND_POOL_INFO(pool_info, m_graphics_queue_family, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT)
-        VK_SAFE_CALL(vkCreateCommandPool(m_device, &pool_info, nullptr, &m_command_pool))
+        auto pool = detail::create_command_pool_info(VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
+                                                     m_graphics_queue_family);
+        VK_SAFE_CALL(vkCreateCommandPool(m_device, &pool, nullptr, &m_command_pool))
 
         // Create a command buffer
-        VK_CREATE_COMMAND_BUFFER_INFO(buf_info, m_command_pool, 1, VK_COMMAND_BUFFER_LEVEL_PRIMARY)
-        VK_SAFE_CALL(vkAllocateCommandBuffers(m_device, &buf_info, &m_main_command_buffer))
+        auto buffer = detail::create_command_buffer_info(m_command_pool, 1, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+        VK_SAFE_CALL(vkAllocateCommandBuffers(m_device, &buffer, &m_main_command_buffer))
     }
 
     void renderer_t::init_framebuffer()
@@ -183,6 +193,44 @@ namespace rayt
 
         VK_SAFE_CALL(vkCreateSemaphore(m_device, &sem_info, nullptr, &m_present_semaphore))
         VK_SAFE_CALL(vkCreateSemaphore(m_device, &sem_info, nullptr, &m_render_semaphore))
+    }
+
+    void renderer_t::init_pipelines()
+    {
+        VK_LOAD_SHADER_MODULE(frag, "shaders/triangle.frag.spv")
+        VK_LOAD_SHADER_MODULE(vert, "shaders/triangle.vert.spv")
+
+        auto layout_info = detail::create_pipeline_layout_info();
+        VK_SAFE_CALL(vkCreatePipelineLayout(m_device, &layout_info, nullptr, &m_triangle_pipeline_layout))
+
+        pipeline_builder_t builder;
+        builder.m_shader_stages.push_back(detail::create_pipeline_shader_stage_info(VK_SHADER_STAGE_VERTEX_BIT, vert));
+        builder.m_shader_stages.push_back(
+                detail::create_pipeline_shader_stage_info(VK_SHADER_STAGE_FRAGMENT_BIT, frag));
+
+        builder.m_vertex_input_info = detail::create_pipeline_vertex_input_state_info();
+        builder.m_input_assembly = detail::create_pipeline_input_assembly_state_info(
+                VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
+
+        builder.m_viewport.x = 0.0f;
+        builder.m_viewport.y = 0.0f;
+        builder.m_viewport.height = (float) m_window_ptr->height;
+        builder.m_viewport.width = (float) m_window_ptr->width;
+        builder.m_viewport.minDepth = 0.0f;
+        builder.m_viewport.maxDepth = 1.0f;
+
+        builder.m_scissor.offset = { 0, 0 };
+        builder.m_scissor.extent = {
+                (unsigned int) m_window_ptr->width,
+                (unsigned int) m_window_ptr->height
+        };
+
+        builder.m_rasterizer = detail::create_pipeline_rasterization_state_info(VK_POLYGON_MODE_FILL);
+        builder.m_multisampling = detail::create_pipeline_multisample_state_info();
+        builder.m_color_blend_attachment = detail::create_pipeline_color_blend_attachment_state();
+        builder.m_pipeline_layout = m_triangle_pipeline_layout;
+
+        m_triangle_pipeline = builder.build(m_device, m_render_pass);
     }
 
     void renderer_t::draw()
@@ -229,6 +277,10 @@ namespace rayt
         rp_info.pClearValues = &clear_value;
 
         vkCmdBeginRenderPass(cmd, &rp_info, VK_SUBPASS_CONTENTS_INLINE);
+        vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, m_triangle_pipeline);
+
+        vkCmdDraw(cmd, 3, 1, 0, 0);
+
         vkCmdEndRenderPass(cmd);
 
         VK_SAFE_CALL(vkEndCommandBuffer(cmd))
@@ -263,6 +315,41 @@ namespace rayt
         present_info.pImageIndices = &swapchain_image_index;
 
         VK_SAFE_CALL(vkQueuePresentKHR(m_graphics_queue, &present_info))
+    }
+
+    bool renderer_t::load_shader_module(const std::string& path, VkShaderModule& out)
+    {
+        try
+        {
+            std::ifstream file(path, std::ios::ate | std::ios::binary);
+            size_t filesize = (size_t) file.tellg();
+
+            // Load file as a uint32
+            std::vector<unsigned int> buffer(filesize / sizeof(unsigned int));
+            file.seekg(0);
+            file.read((char*) buffer.data(), filesize);
+            file.close();
+
+            VkShaderModuleCreateInfo info {};
+            info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+            info.pNext = nullptr;
+            info.codeSize = filesize;
+            info.pCode = buffer.data();
+
+            VkShaderModule module;
+            if (vkCreateShaderModule(m_device, &info, nullptr, &module) != VK_SUCCESS)
+            {
+                return false;
+            }
+
+            out = module;
+            return true;
+        }
+        catch (const std::exception& e)
+        {
+            LOG_ERROR("Failed to load shader module: {}", e.what());
+            return false;
+        }
     }
 
     renderer_t::~renderer_t()
